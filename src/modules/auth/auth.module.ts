@@ -5,12 +5,14 @@ import { UserModule } from '../user/user.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { AuthGuard } from './guards/auth.guard';
+import { GoogleStrategy } from './strategies/google.strategy';
 
 @Module({
   imports: [UserModule, ApiKeyModule],
   controllers: [AuthController],
   providers: [
     AuthService,
+    GoogleStrategy,
     {
       provide: APP_GUARD,
       useClass: AuthGuard,

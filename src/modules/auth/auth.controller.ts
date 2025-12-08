@@ -1,4 +1,5 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import {
   ApiBadRequestResponse,
   ApiConflictResponse,
@@ -15,6 +16,45 @@ import { LoginDto, RefreshTokenDto, RegisterDto } from './dto';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Get('google')
+  @Public()
+  @ApiOperation({ summary: 'Initiate Google OAuth2 login' })
+  @ApiResponse({
+    status: 302,
+    description: 'Redirects to Google OAuth2 login page',
+  })
+  @UseGuards(AuthGuard('google'))
+  // eslint-disable-next-line
+  async googleAuth(@Req() req) {
+    // Redirects to Google OAuth2 login
+    // return req.res.redirect('/'); // The guard will handle the redirect to Google
+  }
+
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  @Public()
+  @ApiOperation({ summary: 'Google OAuth2 callback' })
+  @ApiResponse({
+    status: 200,
+    description: 'User authenticated via Google OAuth2',
+    schema: {
+      example: {
+        user: {
+          id: 'uuid',
+          email: 'user@example.com',
+          name: 'John Doe',
+          role: 'user',
+        },
+        accessToken: 'eyJhbGc...',
+        refreshToken: 'eyJhbGc...',
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({ description: 'Google authentication failed' })
+  async googleAuthRedirect(@Req() req) {
+    return this.authService.googleLogin(req.user);
+  }
 
   @Public()
   @Post('register')

@@ -123,3 +123,15 @@ export class ApiKeyController {
     return this.apiKeyService.rotate(id, req.user!.id);
   }
 }
+
+// Rules:
+// expiry accepts only: 1H, 1D, 1M, 1Y  - Hour, Day, Month, Year
+// The backend must convert expiry into a real datetime and store it as expires_at.
+// Maximum 5 active keys per user.
+// Permissions must be explicitly assigned.
+
+// POST /keys/rollover // Purpose: Create a new API key using the same permissions as an expired key.
+// {
+//   "expired_key_id": "FGH2485K6KK79GKG9GKGK",
+//   "expiry": "1M"
+// }

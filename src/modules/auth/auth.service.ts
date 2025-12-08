@@ -79,6 +79,29 @@ export class AuthService {
     };
   }
 
+  async googleLogin(googleUser: any) {
+    // Find or create user in DB
+    const { email, name } = googleUser;
+    let user = await this.userService.findByEmail(email);
+    if (!user) {
+      user = await this.userService.create({
+        email,
+        name,
+      });
+    }
+    // Generate tokens
+    const tokens = await this.generateTokens(user.id, user.email, user.role);
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      },
+      ...tokens,
+    };
+  }
+
   async refreshToken(refreshToken: string) {
     try {
       const payload = await this.jwtService.verifyAsync<IUserPayload>(
@@ -99,8 +122,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
-
-  private async generateTokens(userId: string, email: string, role: string) {
+  async generateTokens(userId: string, email: string, role: string) {
     const payload = { sub: userId, email, role };
 
     const [accessToken, refreshToken] = await Promise.all([

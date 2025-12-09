@@ -3,6 +3,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 import { ApiKey } from './entities/api-key.entity';
 import { User } from './entities/user.entity';
 import { ApiKeyModule } from './modules/api-key/api-key.module';
@@ -47,7 +49,7 @@ import { WalletModule } from './modules/wallet/wallet.module';
     ApiKeyModule,
     WalletModule,
   ],
-  controllers: [],
-  providers: [],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}

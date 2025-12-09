@@ -1,5 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsDateString, IsOptional, IsString } from 'class-validator';
+import { Transform } from 'class-transformer';
+import {
+  IsArray,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Matches,
+} from 'class-validator';
 
 export class CreateApiKeyDto {
   @ApiProperty({
@@ -19,7 +26,7 @@ export class CreateApiKeyDto {
 
   @ApiPropertyOptional({
     description: 'Array of permissions granted to this API key',
-    example: ['read:users', 'write:orders', 'read:products'],
+    example: ['read', 'transfer'],
     type: [String],
   })
   @IsOptional()
@@ -27,11 +34,16 @@ export class CreateApiKeyDto {
   @IsString({ each: true })
   permissions?: string[];
 
-  @ApiPropertyOptional({
-    description: 'Expiration date for the API key (ISO 8601 format)',
-    example: '2025-12-31T23:59:59Z',
+  @ApiProperty({
+    example: '30D',
+    description: 'Format: <number><H|D|M|Y> (e.g., 12H, 5D, 3M)',
   })
-  @IsOptional()
-  @IsDateString()
-  expiresAt?: string;
+  @IsString()
+  @IsNotEmpty()
+  @Matches(/^\d+[HDMY]$/, {
+    message:
+      'interval must start with a number and end with H, D, M, or Y (e.g., 12H, 30D)',
+  })
+  @Transform(({ value }) => value?.toUpperCase())
+  expiry: string;
 }

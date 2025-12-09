@@ -1,22 +1,11 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { BaseEntity } from './base-entity';
 import { User } from './user.entity';
 
 @Entity('api_keys')
-export class ApiKey {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
+export class ApiKey extends BaseEntity {
   @Column({ unique: true })
-  key: string; // This will store the hashed key
-
+  key: string;
   @Column()
   name: string;
 
@@ -29,8 +18,8 @@ export class ApiKey {
   @Column({ name: 'is_active', default: true })
   isActive: boolean;
 
-  @Column({ name: 'expires_at', nullable: true, type: 'timestamp' })
-  expiresAt: Date | null;
+  @Column({ name: 'expires_at', nullable: false, type: 'timestamp' })
+  expiry: Date;
 
   @Column({ name: 'last_used_at', nullable: true, type: 'timestamp' })
   lastUsedAt: Date | null;
@@ -41,10 +30,4 @@ export class ApiKey {
 
   @Column({ name: 'created_by' })
   createdBy: string;
-
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
-
-  @UpdateDateColumn({ name: 'updated_at' })
-  updatedAt: Date;
 }

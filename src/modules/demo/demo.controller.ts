@@ -68,21 +68,20 @@ export class DemoController {
   }
 
   @RequireApiKey()
-  @RequirePermissions('read:users', 'write:orders')
+  @RequirePermissions('read', 'transfer')
   @Get('with-permissions')
   @ApiSecurity('api-key')
   @ApiOperation({
     summary: 'Demo endpoint with permission requirements',
     description:
-      'This endpoint requires an API key with specific permissions: read:users and write:orders',
+      'This endpoint requires an API key with specific permissions: read and transfer',
   })
   @ApiResponse({
     status: 200,
     description: 'Successfully authenticated with required permissions',
     schema: {
       example: {
-        message:
-          'This requires API key with read:users and write:orders permissions',
+        message: 'This requires API key with read and transfer permissions',
         data: 'highly restricted data',
       },
     },
@@ -92,8 +91,7 @@ export class DemoController {
   })
   getDataWithPermissions() {
     return {
-      message:
-        'This requires API key with read:users and write:orders permissions',
+      message: 'This requires API key with read and transfer permissions',
       data: 'highly restricted data',
     };
   }

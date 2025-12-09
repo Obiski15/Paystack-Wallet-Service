@@ -6,6 +6,7 @@ import * as crypto from 'crypto';
 import { Repository } from 'typeorm';
 import { ApiKey } from '../../entities/api-key.entity';
 import { CreateApiKeyDto } from './dto';
+import { RolloverKeyDTO } from './dto/rollover-api-key.dto';
 
 @Injectable()
 export class ApiKeyService {
@@ -16,11 +17,24 @@ export class ApiKeyService {
   ) {}
 
   async create(userId: string, createApiKeyDto: CreateApiKeyDto) {
+    // check if the user has up to 5 keys
+    const userKeys = await this.findAllByUser(userId);
+
+    if (userKeys.length >= 5) {
+      throw new Error(
+        'API key limit reached. You can only create up to 5 API keys.',
+      );
+    }
+
     // Generate a random API key
     const rawKey = this.generateRawKey();
 
     // Hash the API key before storing
     const hashedKey = await bcrypt.hash(rawKey, 10);
+
+    // TODO: check if hash already exists
+
+    const expiry = this.parsedExpiryDate(createApiKeyDto.expiry);
 
     // Create the API key entity
     const apiKey = this.apiKeyRepository.create({
@@ -28,22 +42,19 @@ export class ApiKeyService {
       name: createApiKeyDto.name,
       serviceName: createApiKeyDto.serviceName,
       permissions: createApiKeyDto.permissions || [],
-      expiresAt: createApiKeyDto.expiresAt
-        ? new Date(createApiKeyDto.expiresAt)
-        : null,
+      expiry,
       createdBy: userId,
     });
 
     await this.apiKeyRepository.save(apiKey);
 
-    // Return the raw key only once (user must save it)
     return {
       id: apiKey.id,
-      key: rawKey, // Only time the raw key is returned
+      key: rawKey,
       name: apiKey.name,
       serviceName: apiKey.serviceName,
       permissions: apiKey.permissions,
-      expiresAt: apiKey.expiresAt,
+      expiry: apiKey.expiry,
       createdAt: apiKey.createdAt,
     };
   }
@@ -60,7 +71,7 @@ export class ApiKeyService {
 
       if (isValid) {
         // Check if key has expired
-        if (apiKey.expiresAt && apiKey.expiresAt < new Date()) {
+        if (this.hasKeyExpired(apiKey.expiry)) {
           return null;
         }
 
@@ -89,7 +100,7 @@ export class ApiKeyService {
         'serviceName',
         'permissions',
         'isActive',
-        'expiresAt',
+        'expiry',
         'lastUsedAt',
         'createdAt',
       ],
@@ -129,13 +140,21 @@ export class ApiKeyService {
     return { message: 'API key deleted successfully' };
   }
 
-  async rotate(id: string, userId: string) {
+  async rotate(body: RolloverKeyDTO, userId: string) {
     const apiKey = await this.apiKeyRepository.findOne({
-      where: { id, createdBy: userId },
+      where: { id: body.expired_key_id, createdBy: userId },
     });
 
     if (!apiKey) {
       throw new NotFoundException('API key not found');
+    }
+
+    if (!apiKey.isActive) {
+      throw new Error('Cannot rotate an inactive API key');
+    }
+
+    if (!this.hasKeyExpired(apiKey.expiry)) {
+      throw new Error('Cannot rotate an API key this has not expired yet');
     }
 
     // Generate new raw key
@@ -143,15 +162,52 @@ export class ApiKeyService {
     const hashedKey = await bcrypt.hash(rawKey, 10);
 
     // Update the key
-    await this.apiKeyRepository.update(id, { key: hashedKey });
+    await this.apiKeyRepository.update(body.expired_key_id, {
+      key: hashedKey,
+      expiry: this.parsedExpiryDate(body.expiry),
+    });
 
     return {
       id: apiKey.id,
-      key: rawKey, // Return the new raw key
+      key: rawKey,
       name: apiKey.name,
       serviceName: apiKey.serviceName,
       permissions: apiKey.permissions,
     };
+  }
+
+  private hasKeyExpired(expiry: Date): boolean {
+    return expiry < new Date();
+  }
+
+  private parsedExpiryDate(expiry: string) {
+    const date = new Date();
+
+    function parseValue(value: string) {
+      return parseInt(value.replace(/[HDMY]/, ''), 10);
+    }
+
+    if (expiry.includes('D')) {
+      const days = parseValue(expiry);
+      date.setDate(date.getDate() + days);
+    }
+
+    if (expiry.includes('H')) {
+      const hours = parseValue(expiry);
+      date.setHours(date.getHours() + hours);
+    }
+
+    if (expiry.includes('M')) {
+      const minutes = parseValue(expiry);
+      date.setMinutes(date.getMinutes() + minutes);
+    }
+
+    if (expiry.includes('Y')) {
+      const years = parseValue(expiry);
+      date.setFullYear(date.getFullYear() + years);
+    }
+
+    return date.toISOString();
   }
 
   private generateRawKey(): string {

@@ -2,21 +2,28 @@ import {
   Body,
   Controller,
   Get,
+  HttpStatus,
   Param,
   Post,
+  Query,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiOperation,
+  ApiQuery,
   ApiResponse,
   ApiSecurity,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import type { Request as ExpressRequest } from 'express';
+import type {
+  Request as ExpressRequest,
+  Response as ExpressResponse,
+} from 'express';
 
 import { Public } from '../../decorators/public.decorator';
 import { RequireApiKey } from '../../decorators/requireApiKey.decorator';
@@ -91,6 +98,42 @@ export class WalletController {
     const userId = req.user!.id;
 
     return this.walletService.getTransactions(userId);
+  }
+
+  @Public()
+  @Get('paystack/callback')
+  @ApiOperation({ summary: 'Handle Paystack redirect after payment' })
+  @ApiQuery({
+    name: 'reference',
+    required: true,
+    description: 'Transaction reference from Paystack',
+  })
+  @ApiResponse({ status: 200, description: 'Payment verified successfully' })
+  @ApiResponse({
+    status: 400,
+    description: 'Payment failed or invalid reference',
+  })
+  async handleCallback(
+    @Query('reference') reference: string,
+    @Res() res: ExpressResponse,
+  ) {
+    // Verify the transaction status
+    const result = await this.walletService.verifyTransaction(reference);
+
+    // Return JSON response to the user
+    if (result.status === 'success') {
+      return res.status(HttpStatus.OK).json({
+        success: true,
+        message: 'Payment successful! Wallet funded.',
+        data: result,
+      });
+    } else {
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        success: false,
+        message: 'Payment verification failed.',
+        data: result,
+      });
+    }
   }
 
   @Public()

@@ -44,7 +44,7 @@ export class WalletService {
       callback_url: `${this.configService.get<string>('APP_URL')}/wallet/paystack/callback`,
     });
 
-    // 3. Save PENDING transaction to DB
+    // Save PENDING transaction to DB
     await this.transactionRepo.save({
       wallet,
       amount: (amount * 100).toString(),
@@ -154,6 +154,49 @@ export class WalletService {
       success: 'success',
       message: 'Transfer complete',
     };
+  }
+
+  async verifyTransaction(reference: string) {
+    // Check local DB
+    const transaction = await this.transactionRepo.findOne({
+      where: { reference },
+      relations: ['wallet'],
+    });
+
+    if (!transaction) throw new NotFoundException('Transaction not found');
+
+    if (transaction.status === TransactionStatus.SUCCESS) {
+      return {
+        status: transaction.status,
+        amount: transaction.amount,
+        reference,
+      };
+    }
+
+    // If still pending, manually verify with Paystack
+    try {
+      const paystackData =
+        await this.paystackService.verifyTransaction(reference);
+
+      if (paystackData.status === 'success') {
+        await this.creditWalletViaWebhook({
+          reference: paystackData.reference,
+          amount: paystackData.amount,
+          status: paystackData.status,
+        });
+
+        return { status: 'success', amount: paystackData.amount, reference };
+      }
+
+      return { status: paystackData.status, reference };
+    } catch {
+      // Handle network errors or Paystack 404s
+      return {
+        status: 'pending',
+        message: 'Could not verify at this moment',
+        reference,
+      };
+    }
   }
 
   async webhookHandler(body: any, signature: string) {

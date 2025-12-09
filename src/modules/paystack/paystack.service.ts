@@ -26,8 +26,8 @@ export class PaystackService {
     return res.data.data;
   }
 
-  async verifyTransaction(reference: string) {
+  async verifyTransaction(reference: string): Promise<Record<string, unknown>> {
     const res = await this.instance.get(`/transaction/verify/${reference}`);
-    return res.data;
+    return res.data.data;
   }
 }

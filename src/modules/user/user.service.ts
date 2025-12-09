@@ -16,11 +16,17 @@ export class UserService {
   }
 
   async findById(id: string): Promise<User | null> {
-    return await this.userRepository.findOne({ where: { id } });
+    return await this.userRepository.findOne({
+      where: { id },
+      relations: ['wallet'],
+    });
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return await this.userRepository.findOne({ where: { email } });
+    return await this.userRepository.findOne({
+      where: { email },
+      relations: ['wallet'],
+    });
   }
 
   async getUser(id: string): Promise<User | null> {
@@ -30,6 +36,7 @@ export class UserService {
   async findAll(): Promise<User[]> {
     return await this.userRepository.find({
       select: ['id', 'email', 'name', 'role', 'createdAt', 'updatedAt'],
+      relations: ['wallet'],
     });
   }
 

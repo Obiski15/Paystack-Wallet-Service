@@ -7,8 +7,8 @@ import { ApiKey } from './entities/api-key.entity';
 import { User } from './entities/user.entity';
 import { ApiKeyModule } from './modules/api-key/api-key.module';
 import { AuthModule } from './modules/auth/auth.module';
-import { DemoModule } from './modules/demo/demo.module';
 import { UserModule } from './modules/user/user.module';
+import { WalletModule } from './modules/wallet/wallet.module';
 
 @Module({
   imports: [
@@ -26,6 +26,7 @@ import { UserModule } from './modules/user/user.module';
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
         entities: [User, ApiKey],
+        autoLoadEntities: true,
         synchronize: configService.get('NODE_ENV') !== 'production',
         logging: false,
       }),
@@ -44,7 +45,7 @@ import { UserModule } from './modules/user/user.module';
     AuthModule,
     UserModule,
     ApiKeyModule,
-    DemoModule,
+    WalletModule,
   ],
   controllers: [],
   providers: [],

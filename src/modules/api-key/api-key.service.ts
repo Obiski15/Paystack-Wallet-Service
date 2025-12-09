@@ -63,6 +63,7 @@ export class ApiKeyService {
     // Find all active API keys
     const apiKeys = await this.apiKeyRepository.find({
       where: { isActive: true },
+      relations: ['user'],
     });
 
     // Check each key to see if it matches
@@ -82,6 +83,7 @@ export class ApiKeyService {
 
         return {
           id: apiKey.id,
+          user: apiKey.user,
           permissions: apiKey.permissions,
           serviceName: apiKey.serviceName,
         };

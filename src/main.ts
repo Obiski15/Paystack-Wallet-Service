@@ -45,9 +45,9 @@ async function bootstrap() {
 
   // Swagger documentation
   const config = new DocumentBuilder()
-    .setTitle('Mini Auth API')
+    .setTitle('Paystack Wallet Service API')
     .setDescription(
-      'Authentication and API Key Management System for Service-to-Service Access',
+      'Paystack Wallet Service, including authentication, wallet management, and transaction processing.',
     )
     .setVersion('1.0')
     .addBearerAuth(
@@ -74,7 +74,6 @@ async function bootstrap() {
     .addTag('Auth', 'Authentication endpoints')
     .addTag('API Keys', 'API Key management')
     .addTag('Users', 'User management')
-    .addTag('Demo', 'Demo endpoints showing authentication methods')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

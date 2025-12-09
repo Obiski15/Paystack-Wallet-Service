@@ -55,12 +55,26 @@ export class AuthGuard implements CanActivate {
     if (apiKeyHeader) {
       const validatedKey =
         await this.apiKeyService.validateApiKey(apiKeyHeader);
+
       if (validatedKey) {
         request['apiKey'] = {
           id: validatedKey.id,
           permissions: validatedKey.permissions,
           serviceName: validatedKey.serviceName,
         };
+
+        if (validatedKey.user) {
+          request['user'] = {
+            id: validatedKey.user.id,
+            email: validatedKey.user.email,
+            name: validatedKey.user.name,
+            role: validatedKey.user.role,
+          };
+        } else {
+          throw new UnauthorizedException(
+            'API Key is not linked to a valid user',
+          );
+        }
 
         // Check if specific permissions are required
         const requiredPermissions = this.reflector.getAllAndOverride<string[]>(
@@ -82,6 +96,7 @@ export class AuthGuard implements CanActivate {
 
         return true;
       }
+
       // If API key provided but invalid, throw error
       throw new UnauthorizedException('Invalid API key');
     }

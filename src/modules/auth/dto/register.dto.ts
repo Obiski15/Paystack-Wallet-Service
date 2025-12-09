@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEmail,
   IsEnum,
+  IsNotEmpty,
   IsOptional,
   IsString,
   MinLength,
@@ -29,9 +30,9 @@ export class RegisterDto {
     description: 'User full name',
     example: 'John Doe',
   })
-  @IsOptional()
   @IsString()
-  name?: string;
+  @IsNotEmpty()
+  name: string;
 
   @ApiPropertyOptional({
     description: 'User role',

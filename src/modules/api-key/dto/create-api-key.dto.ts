@@ -26,7 +26,7 @@ export class CreateApiKeyDto {
 
   @ApiPropertyOptional({
     description: 'Array of permissions granted to this API key',
-    example: ['read', 'transfer'],
+    example: ['read', 'transfer', 'deposit'],
     type: [String],
   })
   @IsOptional()

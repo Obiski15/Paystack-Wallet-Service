@@ -29,7 +29,7 @@ import { WalletModule } from './modules/wallet/wallet.module';
         database: configService.get('DB_DATABASE'),
         entities: [User, ApiKey],
         autoLoadEntities: true,
-        synchronize: configService.get('NODE_ENV') !== 'production',
+        synchronize: true,
         logging: false,
       }),
       inject: [ConfigService],

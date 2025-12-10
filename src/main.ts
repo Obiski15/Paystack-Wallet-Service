@@ -70,10 +70,10 @@ async function bootstrap() {
       },
       'api-key',
     )
-    .addServer('http://localhost:3000', 'Development')
     .addTag('Auth', 'Authentication endpoints')
     .addTag('API Keys', 'API Key management')
     .addTag('Users', 'User management')
+    .addTag('Wallet', 'Wallet management')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

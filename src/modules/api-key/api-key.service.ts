@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
@@ -21,7 +25,7 @@ export class ApiKeyService {
     const userKeys = await this.findAllByUser(userId);
 
     if (userKeys.length >= 5) {
-      throw new Error(
+      throw new BadRequestException(
         'API key limit reached. You can only create up to 5 API keys.',
       );
     }
@@ -151,12 +155,14 @@ export class ApiKeyService {
       throw new NotFoundException('API key not found');
     }
 
-    if (!apiKey.isActive) {
-      throw new Error('Cannot rotate an inactive API key');
+    if (apiKey.isActive) {
+      throw new BadRequestException('Cannot rotate an inactive API key');
     }
 
-    if (!this.hasKeyExpired(apiKey.expiry)) {
-      throw new Error('Cannot rotate an API key this has not expired yet');
+    if (!this.hasKeyExpired(apiKey.expiry) && apiKey.isActive) {
+      throw new BadRequestException(
+        'Cannot rotate an API key this has not expired yet',
+      );
     }
 
     // Generate new raw key
@@ -167,6 +173,7 @@ export class ApiKeyService {
     await this.apiKeyRepository.update(body.expired_key_id, {
       key: hashedKey,
       expiry: this.parsedExpiryDate(body.expiry),
+      isActive: true,
     });
 
     return {

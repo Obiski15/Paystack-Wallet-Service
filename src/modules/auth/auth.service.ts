@@ -225,7 +225,10 @@ export class AuthService {
       }
     }
 
-    if (!isUnique) throw new Error('Could not generate unique wallet number');
+    if (!isUnique)
+      throw new InternalServerErrorException(
+        'Could not generate unique wallet number',
+      );
 
     return walletNumber.toString();
   }

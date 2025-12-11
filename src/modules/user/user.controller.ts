@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  NotFoundException,
   Param,
   Patch,
   Req,
@@ -36,7 +37,7 @@ export class UserController {
     const user = await this.userService.findById(userId);
 
     if (!user) {
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -66,7 +67,7 @@ export class UserController {
     const user = await this.userService.findById(id);
 
     if (!user) {
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -94,7 +95,7 @@ export class UserController {
     const user = await this.userService.update(userId, updateUserDto);
 
     if (!user) {
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -113,7 +114,7 @@ export class UserController {
     const user = await this.userService.update(id, updateUserDto);
 
     if (!user) {
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
